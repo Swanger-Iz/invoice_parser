@@ -1,0 +1,7 @@
+*.pt
+*.pth
+data
+.venv
+.env
+venv
+models
