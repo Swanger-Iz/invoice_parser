@@ -1,7 +1,19 @@
+# Models
 *.pt
 *.pth
+
+# Datasets or other data files
 data
+
+# eviroments
 .venv
 .env
 venv
-models
+
+# Models
+det
+doc_orientation
+rec
+
+# Python cache
+__pycache__
