@@ -1,5 +1,6 @@
 import io
 import logging
+import os
 from typing import Annotated
 
 # import sys
@@ -8,9 +9,9 @@ from typing import Annotated
 import numpy as np
 from dotenv import load_dotenv
 from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import InjectedToolArg, tool
+from langchain_openrouter import ChatOpenRouter
 from paddleocr import PaddleOCR
 from PIL import Image
 
@@ -79,7 +80,7 @@ class ExtractionModel:
         ocr_model = self._init_PaddleOCR()
         image_parser = self._create_parser_tool(ocr_model)
         agent = create_agent(
-            model=init_chat_model(model=chat_model_name, model_provider="openrouter", temperature=0),
+            model=ChatOpenRouter(model=chat_model_name, temperature=0, api_key=os.getenv("OPENROUTER_API_KEY")),
             tools=[image_parser],
             system_prompt=system_prompt,
             response_format=ResponseFormat,
