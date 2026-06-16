@@ -8,8 +8,9 @@ import uvicorn
 sys.path.insert(1, str(Path(__file__).parent.parent))  # Вставляю путь invoice_ai
 
 
-from fastapi import FastAPI, File, Request, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from langchain.agents.structured_output import StructuredOutputValidationError
 from langchain.messages import HumanMessage
@@ -23,7 +24,7 @@ model_requests = []
 invoice_ai_dir = Path(__file__).parent.parent
 # print("Working directory:", str(invoice_ai_dir))
 
-# Init a image
+# Init a image, test
 image_path = invoice_ai_dir / "data" / "orion_agreement.png"
 image = Image.open(str(image_path)).convert("RGB")
 
@@ -75,15 +76,37 @@ def safely_exec_agent(agent, attempts=3, image_in_bytes: bytes = None):
 
 # FastAPI
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
+# ===== СТРАНИЦЫ =====
 @app.get("/", tags=["Main"], summary="Get init message")
-async def root():
-    return {"message": "Hi user!"}
+async def ui():
+    return FileResponse("static/index.html")
+
+
+@app.get("/recognize")
+async def recognize():
+    return FileResponse("static/recognize.html")
 
 
 @app.post("/images", tags=["Main"], summary="Send image and get FIO from it.")
 async def get_fio(upload_file: UploadFile):
+    file_size_MB = upload_file.size / 1024 / 1024
+    if file_size_MB > 20:
+        return {
+            "Status": "FILE_IS_TOO_BIG",
+            "Constructor_name": None,
+            "Customer_name": None,
+        }
+
     image_in_bytes = await upload_file.read()  # читает содержимое как bytes
 
     response = safely_exec_agent(extractor_agent, 3, image_in_bytes=image_in_bytes)
@@ -96,7 +119,7 @@ async def get_fio(upload_file: UploadFile):
         }
         if response is not None
         else {
-            "Status": "OK",
+            "Status": "NO_FOUND",
             "Constructor_name": None,
             "Customer_name": None,
         }
