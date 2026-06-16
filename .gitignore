@@ -10,10 +10,5 @@ data
 .env
 venv
 
-# Models
-det
-doc_orientation
-rec
-
 # Python cache
 __pycache__
