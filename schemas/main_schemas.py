@@ -11,5 +11,5 @@ class ResponseFormat(BaseModel):
 # Caching
 class ModelRequests(ResponseFormat):
     id: int = Field(default=0, description="request_id")
-    status: Literal["good", "bad"]
+    status: Literal["SUCCESS", "BAD"]
     image_bytes: bytes

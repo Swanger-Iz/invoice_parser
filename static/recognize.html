@@ -5,6 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PaddleOCR - Распознавание</title>
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* Дополнительные стили для времени выполнения */
+        .processing-time {
+            display: none;
+            text-align: center;
+            padding: 12px;
+            background: #ebf8ff;
+            border-radius: 10px;
+            margin-top: 16px;
+            color: #2b6cb0;
+            font-weight: 500;
+            font-size: 14px;
+            border: 1px solid #bee3f8;
+        }
+        
+        .processing-time.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .processing-time .time-value {
+            font-weight: 700;
+            color: #2c5282;
+        }
+        
+        .processing-time .spinner-small {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #bee3f8;
+            border-top: 2px solid #2b6cb0;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        
+        /* Стили для размера файла */
+        .file-size.over-limit {
+            color: #dc3545 !important;
+            background: #fed7d7 !important;
+            font-weight: 700;
+        }
+        
+        .file-size.under-limit {
+            color: #48bb78 !important;
+            background: #e6fffa !important;
+        }
+        
+        /* Анимация для результатов */
+        @keyframes fadeInResult {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .result-item {
+            animation: fadeInResult 0.5s ease forwards;
+            opacity: 0;
+        }
+        
+        .result-item:nth-child(1) { animation-delay: 0.1s; }
+        .result-item:nth-child(2) { animation-delay: 0.2s; }
+        
+        /* Статус выполнения */
+        .status-processing {
+            background: #bee3f8 !important;
+            color: #2b6cb0 !important;
+        }
+        
+        /* Улучшенный вид ошибки */
+        .error-area {
+            animation: shake 0.5s ease;
+        }
+        
+        /* Таймер выполнения */
+        .timer-display {
+            font-size: 13px;
+            color: #4a5568;
+            margin-top: 8px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -38,7 +125,7 @@
             <div class="file-info-area" id="fileInfo" style="display: none;">
                 <div class="file-details">
                     <span class="file-name" id="fileName">image.jpg</span>
-                    <span class="file-size" id="fileSize">2.5 МБ</span>
+                    <span class="file-size under-limit" id="fileSize">2.5 МБ</span>
                 </div>
                 <button class="btn-remove" id="removeFile">✕</button>
             </div>
@@ -47,6 +134,12 @@
             <button class="btn-submit" id="submitBtn" disabled>
                 <span>🔍</span> Распознать
             </button>
+
+            <!-- Время выполнения -->
+            <div class="processing-time" id="processingTime">
+                <span class="spinner-small"></span>
+                Выполняется запрос... <span class="time-value" id="elapsedTime">0.0</span> с
+            </div>
 
             <!-- Результаты -->
             <div class="results-area" id="resultsArea" style="display: none;">
@@ -65,6 +158,11 @@
                     <div class="result-value" id="customerName">—</div>
                 </div>
 
+                <!-- Время выполнения результата -->
+                <div class="timer-display" id="resultTime" style="display: none;">
+                    ⏱️ Время обработки: <strong id="finalTime">0.0</strong> секунд
+                </div>
+
                 <div class="result-actions">
                     <button class="btn-clear" id="clearResults">Очистить</button>
                     <button class="btn-download" id="downloadResult">Скачать результат</button>
@@ -79,7 +177,7 @@
 
             <!-- Футер -->
             <div class="footer">
-                <span>⚡ FastAPI + PaddleOCR</span>
+                <span>⚡ FastAPI + PaddleOCR + LangChain</span>
                 <span id="timestamp"></span>
             </div>
         </div>

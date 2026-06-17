@@ -8,9 +8,10 @@ import uvicorn
 sys.path.insert(1, str(Path(__file__).parent.parent))  # Вставляю путь invoice_ai
 
 
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, Request, UploadFile
+from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from langchain.agents.structured_output import StructuredOutputValidationError
 from langchain.messages import HumanMessage
@@ -19,7 +20,12 @@ from PIL import Image
 from models.models import ExtractionModel
 from schemas.main_schemas import ModelRequests
 
-model_requests = []
+response_list = [
+    ModelRequests(id=0 + 1, status="SUCCESS", constructor_name="Кучков Игорь Маркович", customer_name="Валеев Артур Хамзадович", image_bytes=bytes(10)),
+    ModelRequests(
+        id=1 + 1, status="SUCCESS", constructor_name="Горемыкин Артем Динисович", customer_name="Уразбахтин Тимур Фанильевич", image_bytes=bytes(12)
+    ),
+]
 
 invoice_ai_dir = Path(__file__).parent.parent
 # print("Working directory:", str(invoice_ai_dir))
@@ -51,26 +57,28 @@ def safely_exec_agent(agent, attempts=3, image_in_bytes: bytes = None):
     messages, config = init_configs(image_bytes=image_in_bytes)
     print("Safely starting the agent")
     for attempt in range(attempts):
+        start_time = time.time()
         print(f"Attempt - {attempt+1}\n")
         try:
-            start_time = time.time()
             response = agent.invoke({"messages": messages}, config=config)
             print("=" * 20, "Success", "=" * 20)
-            model_requests.append(ModelRequests(id=len(model_requests) + 1, status="good", image_bytes=config["configurable"]["image_bytes"]))
             print(f"Response time = {time.time() - start_time:.2f}")
             return response
         except StructuredOutputValidationError:
             print(f"Попытка {attempt+1}: пустой/невалидный ответ модели, повтор...")
+            print(f"Response time = {time.time() - start_time:.2f}")
             time.sleep(2)
         except Exception as e:
             if "TooManyRequests" in str(e):
-                print("Rate limit, wait 60 sec...")
-                time.sleep(60)
+                print(f"Response time = {time.time() - start_time:.2f}")
+                print("Rate limit, try againg in 60 sec...")
             else:
-                raise
+                print("ERROR!")
+                print(f"Response time = {time.time() - start_time:.2f}")
+        else:
+            print("ERROR!")
     print("=" * 20, "Fail", "=" * 20)
     print(f"Response time = {time.time() - start_time:.2f}")
-    model_requests.append(ModelRequests(id=len(model_requests) + 1, status="bad", image_bytes=config["configurable"]["image_bytes"]))
     return None
 
 
@@ -87,16 +95,48 @@ app.add_middleware(
 
 
 # ===== СТРАНИЦЫ =====
-@app.get("/", tags=["Main"], summary="Get init message")
+@app.get("/", tags=["Display"], summary="Get init message")
 async def ui():
     return FileResponse("static/index.html")
 
 
-@app.get("/recognize")
+@app.get("/recognize", tags=["Display"])
 async def recognize():
     return FileResponse("static/recognize.html")
 
 
+@app.get("/requests", tags=["Display"])
+async def get_all_requests():
+    return [{"Request ID": r.id, "Request_status": r.status, "constructor_name": r.constructor_name, "customer_name": r.customer_name} for r in response_list]
+
+
+@app.get("/requests/{request_id}", tags=["Display"])
+async def get_request(request_id: str):
+    request_id = int(request_id) - 1
+    print(f"{request_id=}")
+    if request_id < 0:
+        request_id = 0
+    elif request_id > len(response_list) - 1:
+        request_id = len(response_list) - 1
+
+    return {
+        "Request ID": response_list[request_id].id,
+        "Request_status": response_list[request_id].status,
+        "constructor_name": response_list[request_id].constructor_name,
+        "customer_name": response_list[request_id].customer_name,
+    }
+
+
+# ====== ОБРАБОТКА ОШИБОК ======
+@app.exception_handler(404)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    if exc.status_code == 404:
+        return FileResponse("static/error404.html", status_code=404)
+    else:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+
+# ===== ЛОГИКА ======
 @app.post("/images", tags=["Main"], summary="Send image and get FIO from it.")
 async def get_fio(upload_file: UploadFile):
     file_size_MB = upload_file.size / 1024 / 1024
@@ -111,20 +151,27 @@ async def get_fio(upload_file: UploadFile):
 
     response = safely_exec_agent(extractor_agent, 3, image_in_bytes=image_in_bytes)
 
-    post_response = (
-        {
-            "Status": "OK",
-            "Constructor_name": response["structured_response"].constructor_name,
-            "Customer_name": response["structured_response"].customer_name,
-        }
-        if response is not None
-        else {
-            "Status": "NO_FOUND",
-            "Constructor_name": None,
-            "Customer_name": None,
-        }
+    response_list.append(
+        ModelRequests(
+            id=len(response_list) + 1,
+            status=(
+                "SUCCESS"
+                if response["structured_response"].constructor_name is not None and response["structured_response"].customer_name is not None
+                else "BAD"
+            ),
+            constructor_name=response["structured_response"].constructor_name if response is not None else None,
+            customer_name=response["structured_response"].customer_name if response is not None else None,
+            image_bytes=image_in_bytes,
+        )
     )
 
+    post_response = {
+        "Status": response_list[-1].status,
+        "Constructor_name": response_list[-1].constructor_name,
+        "Customer_name": response_list[-1].customer_name,
+    }
+
+    print(f"Constructor_name: {post_response['Constructor_name']}, Customer_name: {post_response['Customer_name']}")
     return post_response
 
 
