@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import time
 from typing import Annotated
 
 # import sys
@@ -9,6 +10,8 @@ from typing import Annotated
 import numpy as np
 from dotenv import load_dotenv
 from langchain.agents import create_agent
+from langchain.agents.structured_output import StructuredOutputValidationError
+from langchain.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import InjectedToolArg, tool
 from langchain_openrouter import ChatOpenRouter
@@ -27,7 +30,7 @@ from schemas.main_schemas import ResponseFormat
 logger = logging.getLogger(__name__)
 
 
-class ExtractionModel:
+class ExtractionAgent:
     # _instanse = None
     # _initialized = False
 
@@ -35,8 +38,17 @@ class ExtractionModel:
         load_dotenv()
         print(".env vars set")
 
+        self.ocr_model = self._init_PaddleOCR()
+        self.image_parser = self._create_parser_tool(self.ocr_model)
+        self.agent = create_agent(
+            model=ChatOpenRouter(model=chat_model_name, temperature=0, api_key=os.getenv("OPENROUTER_API_KEY")),
+            tools=[self.image_parser],
+            system_prompt=system_prompt,
+            response_format=ResponseFormat,
+            # debug=True,
+        )
+
     # PaddleOCR init
-    @classmethod
     def _init_PaddleOCR(self) -> PaddleOCR:
         ocr = PaddleOCR(
             # det config
@@ -60,7 +72,6 @@ class ExtractionModel:
         return ocr
 
     # Langchain tools and models configuring
-    @classmethod
     def _create_parser_tool(self, ocr_model: PaddleOCR):
         @tool(description="Parse text from byted image")
         def image_parser(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
@@ -75,16 +86,44 @@ class ExtractionModel:
 
         return image_parser
 
-    @classmethod
-    def init_extractor_agent(self):
-        ocr_model = self._init_PaddleOCR()
-        image_parser = self._create_parser_tool(ocr_model)
-        agent = create_agent(
-            model=ChatOpenRouter(model=chat_model_name, temperature=0, api_key=os.getenv("OPENROUTER_API_KEY")),
-            tools=[image_parser],
-            system_prompt=system_prompt,
-            response_format=ResponseFormat,
-            # debug=True,
-        )
+    # llm params
+    def init_llm_configs(self, image_bytes: bytes):
+        messages = [HumanMessage(content_blocks=[{"type": "text", "text": "Проанализируй договор картинки полученной в битовом формате!"}])]
+        config = {"configurable": {"image_bytes": image_bytes}}
 
-        return agent
+        return (messages, config)
+
+    # llm invoke
+    def safely_exec_agent(self, attempts=3, image_in_bytes: bytes = None):
+        if image_in_bytes is None:
+            return None
+        messages, config = self.init_llm_configs(image_bytes=image_in_bytes)
+        print("Safely starting the agent")
+        for attempt in range(attempts):
+            start_time = time.time()
+            print(f"Attempt - {attempt+1}\n")
+            try:
+                response = self.agent.invoke({"messages": messages}, config=config)
+                print("=" * 20, "Success", "=" * 20)
+                print(f"Response time = {time.time() - start_time:.2f}")
+                return response
+            except StructuredOutputValidationError:
+                print(f"Попытка {attempt+1}: пустой/невалидный ответ модели, повтор...")
+                print(f"Response time = {time.time() - start_time:.2f}")
+                time.sleep(2)
+            except Exception as e:
+                if "TooManyRequests" in str(e):
+                    print(f"Response time = {time.time() - start_time:.2f}")
+                    print("Rate limit, try againg in 60 sec...")
+                else:
+                    print("ERROR!")
+                    print(f"Response time = {time.time() - start_time:.2f}")
+            else:
+                print("ERROR!")
+        print("=" * 20, "Fail", "=" * 20)
+        print(f"Response time = {time.time() - start_time:.2f}")
+        return None
+
+
+# LLM init
+extractor_agent = ExtractionAgent()

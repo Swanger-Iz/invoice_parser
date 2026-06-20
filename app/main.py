@@ -1,86 +1,23 @@
-import io
 import sys
-import time
 from pathlib import Path
 
 import uvicorn
 
 sys.path.insert(1, str(Path(__file__).parent.parent))  # Вставляю путь invoice_ai
 
-
 from fastapi import FastAPI, Request, UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from langchain.agents.structured_output import StructuredOutputValidationError
-from langchain.messages import HumanMessage
-from PIL import Image
 
-from models.models import ExtractionModel
+from models.models import extractor_agent
 from schemas.main_schemas import ModelRequests
 
 response_list = [
-    ModelRequests(id=0 + 1, status="SUCCESS", constructor_name="Кучков Игорь Маркович", customer_name="Валеев Артур Хамзадович", image_bytes=bytes(10)),
-    ModelRequests(
-        id=1 + 1, status="SUCCESS", constructor_name="Горемыкин Артем Динисович", customer_name="Уразбахтин Тимур Фанильевич", image_bytes=bytes(12)
-    ),
+    ModelRequests(id=1, status="SUCCESS", constructor_name="Кучков Игорь Маркович", customer_name="Валеев Артур Хамзадович", image_bytes=bytes(10)),
+    ModelRequests(id=1, status="SUCCESS", constructor_name="Горемыкин Артем Динисович", customer_name="Уразбахтин Тимур Фанильевич", image_bytes=bytes(12)),
 ]
-
-invoice_ai_dir = Path(__file__).parent.parent
-# print("Working directory:", str(invoice_ai_dir))
-
-# Init a image, test
-image_path = invoice_ai_dir / "data" / "orion_agreement.png"
-image = Image.open(str(image_path)).convert("RGB")
-
-byte_buffer = io.BytesIO()
-image.save(byte_buffer, format=image_path.suffix[1:])
-image_bytes = byte_buffer.getvalue()
-
-# LLM init
-extractor_agent = ExtractionModel.init_extractor_agent()
-
-
-# llm params
-def init_configs(image_bytes: bytes):
-    messages = [HumanMessage(content_blocks=[{"type": "text", "text": "Проанализируй договор картинки полученной в битовом формате!"}])]
-    config = {"configurable": {"image_bytes": image_bytes}}
-
-    return (messages, config)
-
-
-# llm invoke
-def safely_exec_agent(agent, attempts=3, image_in_bytes: bytes = None):
-    if image_in_bytes is None:
-        return None
-    messages, config = init_configs(image_bytes=image_in_bytes)
-    print("Safely starting the agent")
-    for attempt in range(attempts):
-        start_time = time.time()
-        print(f"Attempt - {attempt+1}\n")
-        try:
-            response = agent.invoke({"messages": messages}, config=config)
-            print("=" * 20, "Success", "=" * 20)
-            print(f"Response time = {time.time() - start_time:.2f}")
-            return response
-        except StructuredOutputValidationError:
-            print(f"Попытка {attempt+1}: пустой/невалидный ответ модели, повтор...")
-            print(f"Response time = {time.time() - start_time:.2f}")
-            time.sleep(2)
-        except Exception as e:
-            if "TooManyRequests" in str(e):
-                print(f"Response time = {time.time() - start_time:.2f}")
-                print("Rate limit, try againg in 60 sec...")
-            else:
-                print("ERROR!")
-                print(f"Response time = {time.time() - start_time:.2f}")
-        else:
-            print("ERROR!")
-    print("=" * 20, "Fail", "=" * 20)
-    print(f"Response time = {time.time() - start_time:.2f}")
-    return None
-
 
 # FastAPI
 app = FastAPI()
@@ -114,10 +51,8 @@ async def get_all_requests():
 async def get_request(request_id: str):
     request_id = int(request_id) - 1
     print(f"{request_id=}")
-    if request_id < 0:
-        request_id = 0
-    elif request_id > len(response_list) - 1:
-        request_id = len(response_list) - 1
+    if request_id < 0 or request_id > len(response_list) - 1:
+        return FileResponse("static/error404.html", status_code=404)
 
     return {
         "Request ID": response_list[request_id].id,
@@ -149,7 +84,7 @@ async def get_fio(upload_file: UploadFile):
 
     image_in_bytes = await upload_file.read()  # читает содержимое как bytes
 
-    response = safely_exec_agent(extractor_agent, 3, image_in_bytes=image_in_bytes)
+    response = extractor_agent.safely_exec_agent(3, image_in_bytes=image_in_bytes)
 
     response_list.append(
         ModelRequests(
@@ -179,10 +114,16 @@ if __name__ == "__main__":
     print("script running")
 
     uvicorn.run("main:app", reload=True)
-    # response = safely_exec_agent(extractor_agent, 3)
-    # if response is not None:
-    #     print(f"ФИО исполнителя: {response['structured_response'].constructor_name};\
-    #         ФИО заказчика: {response['structured_response'].customer_name}")
-    # else:
-    #     print("Error!")
-    # print(model_requests)
+
+
+##### TESTS ######
+# invoice_ai_dir = Path(__file__).parent.parent
+# # print("Working directory:", str(invoice_ai_dir))
+
+# # Init a image, test
+# image_path = invoice_ai_dir / "data" / "orion_agreement.png"
+# image = Image.open(str(image_path)).convert("RGB")
+
+# byte_buffer = io.BytesIO()
+# image.save(byte_buffer, format=image_path.suffix[1:])
+# image_bytes = byte_buffer.getvalue()
