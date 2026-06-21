@@ -30,46 +30,53 @@ let timerInterval = null;
 
 // Обновляем время
 function updateTimestamp() {
-    timestamp.textContent = new Date().toLocaleTimeString();
+    if (timestamp) {
+        timestamp.textContent = new Date().toLocaleTimeString();
+    }
 }
 updateTimestamp();
 setInterval(updateTimestamp, 10000);
 
 // Клик для выбора файла
-uploadArea.addEventListener('click', () => {
-    fileInput.click();
-});
+if (uploadArea) {
+    uploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+}
 
 // Drag and Drop
-uploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadArea.classList.add('dragover');
-});
+if (uploadArea) {
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
 
-uploadArea.addEventListener('dragleave', () => {
-    uploadArea.classList.remove('dragover');
-});
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
 
-uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-    
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        handleFile(files[0]);
-    }
-});
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+}
 
 // Выбор файла через input
-fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-        handleFile(e.target.files[0]);
-    }
-});
+if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+}
 
 // Обработка файла
 function handleFile(file) {
-    // Проверяем тип
     if (!file.type.startsWith('image/')) {
         showError('Пожалуйста, выберите изображение');
         return;
@@ -78,32 +85,26 @@ function handleFile(file) {
     selectedFile = file;
     const sizeMB = file.size / 1024 / 1024;
     
-    // Показываем информацию о файле
     fileName.textContent = file.name;
     fileSize.textContent = `${sizeMB.toFixed(2)} МБ`;
     fileInfo.style.display = 'flex';
-    uploadArea.classList.add('has-file');
+    if (uploadArea) uploadArea.classList.add('has-file');
     errorArea.style.display = 'none';
     
-    // Проверяем размер (20 МБ)
     if (file.size > MAX_SIZE_BYTES) {
         fileSize.className = 'file-size over-limit';
         submitBtn.disabled = true;
         showError(`Файл слишком большой (${sizeMB.toFixed(1)} МБ). Максимум ${MAX_SIZE_MB} МБ`);
-        // Удаляем превью если было
-        const preview = uploadArea.querySelector('.preview-image');
+        const preview = uploadArea ? uploadArea.querySelector('.preview-image') : null;
         if (preview) preview.remove();
         return;
     } else {
         fileSize.className = 'file-size under-limit';
         submitBtn.disabled = false;
         errorArea.style.display = 'none';
-        
-        // Показываем превью только если файл не слишком большой
         previewImage(file);
     }
     
-    // Скрываем предыдущие результаты
     resultsArea.style.display = 'none';
     processingTime.classList.remove('active');
     resultTime.style.display = 'none';
@@ -114,7 +115,7 @@ function handleFile(file) {
 function previewImage(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
-        // Удаляем старый превью если есть
+        if (!uploadArea) return;
         const oldPreview = uploadArea.querySelector('.preview-image');
         if (oldPreview) oldPreview.remove();
         
@@ -128,17 +129,19 @@ function previewImage(file) {
 }
 
 // Удаление файла
-removeFile.addEventListener('click', (e) => {
-    e.stopPropagation();
-    clearFile();
-});
+if (removeFile) {
+    removeFile.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearFile();
+    });
+}
 
 function clearFile() {
     selectedFile = null;
     fileInfo.style.display = 'none';
-    uploadArea.classList.remove('has-file');
+    if (uploadArea) uploadArea.classList.remove('has-file');
     submitBtn.disabled = true;
-    fileInput.value = '';
+    if (fileInput) fileInput.value = '';
     resultsArea.style.display = 'none';
     errorArea.style.display = 'none';
     currentResult = null;
@@ -146,11 +149,11 @@ function clearFile() {
     resultTime.style.display = 'none';
     stopTimer();
     
-    // Удаляем превью
-    const preview = uploadArea.querySelector('.preview-image');
-    if (preview) preview.remove();
+    if (uploadArea) {
+        const preview = uploadArea.querySelector('.preview-image');
+        if (preview) preview.remove();
+    }
     
-    // Сбрасываем стиль размера
     fileSize.className = 'file-size under-limit';
 }
 
@@ -180,85 +183,71 @@ function stopTimer() {
 }
 
 // Отправка файла
-submitBtn.addEventListener('click', async () => {
-    if (!selectedFile) return;
-    
-    // Дополнительная проверка перед отправкой
-    if (selectedFile.size > MAX_SIZE_BYTES) {
-        showError(`Файл слишком большой (${(selectedFile.size / 1024 / 1024).toFixed(1)} МБ). Максимум ${MAX_SIZE_MB} МБ`);
-        submitBtn.disabled = true;
-        return;
-    }
-    
-    // Подготовка к отправке
-    const formData = new FormData();
-    formData.append('upload_file', selectedFile);
-    
-    submitBtn.disabled = true;
-    submitBtn.classList.add('loading');
-    submitBtn.innerHTML = '<span>⏳</span> Обработка...';
-    errorArea.style.display = 'none';
-    resultsArea.style.display = 'none';
-    resultTime.style.display = 'none';
-    
-    // Запускаем таймер
-    startTimer();
-    
-    try {
-        const response = await fetch('/images', {
-            method: 'POST',
-            body: formData
-        });
+if (submitBtn) {
+    submitBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
         
-        // Останавливаем таймер
-        stopTimer();
-        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-        
-        if (!response.ok) {
-            throw new Error(`Ошибка сервера: ${response.status}`);
+        if (selectedFile.size > MAX_SIZE_BYTES) {
+            showError(`Файл слишком большой (${(selectedFile.size / 1024 / 1024).toFixed(1)} МБ). Максимум ${MAX_SIZE_MB} МБ`);
+            submitBtn.disabled = true;
+            return;
         }
         
-        const data = await response.json();
-        currentResult = data;
+        const formData = new FormData();
+        formData.append('upload_file', selectedFile);
         
-        // Показываем время выполнения
-        finalTime.textContent = totalTime;
-        resultTime.style.display = 'block';
-        
-        // Обрабатываем ответ
-        handleResponse(data);
-        
-    } catch (error) {
-        stopTimer();
-        showError(`Ошибка соединения: ${error.message}`);
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+        submitBtn.innerHTML = '<span>⏳</span> Обработка...';
+        errorArea.style.display = 'none';
+        resultsArea.style.display = 'none';
         resultTime.style.display = 'none';
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('loading');
-        submitBtn.innerHTML = '<span>🔍</span> Распознать';
-    }
-});
+        
+        startTimer();
+        
+        try {
+            const response = await fetch('/api/get_fio', {
+                method: 'POST',
+                body: formData
+            });
+            
+            stopTimer();
+            const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            
+            if (!response.ok) {
+                throw new Error(`Ошибка сервера: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            currentResult = data;
+            
+            finalTime.textContent = totalTime;
+            resultTime.style.display = 'block';
+            
+            handleResponse(data);
+            
+        } catch (error) {
+            stopTimer();
+            showError(`Ошибка соединения: ${error.message}`);
+            resultTime.style.display = 'none';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+            submitBtn.innerHTML = '<span>🔍</span> Распознать';
+        }
+    });
+}
 
 // Обработка ответа от сервера
 function handleResponse(data) {
-    console.log('Получены данные:', data);
-    console.log('Status:', data.Status);
-    console.log('Тип Status:', typeof data.Status);
-    
     resultsArea.style.display = 'block';
     errorArea.style.display = 'none';
     
-    // Получаем статус и нормализуем (приводим к верхнему регистру)
     const status = String(data.Status).toUpperCase().trim();
-    console.log('Нормализованный статус:', status);
-    
-    // Обновляем бейдж статуса
-    statusBadge.textContent = data.Status; // Показываем оригинальный статус
+    statusBadge.textContent = data.Status;
     statusBadge.className = 'status-badge';
     
-    // Обработка разных статусов
     if (status === 'SUCCESS' || status === 'GOOD') {
-        // Успешное распознавание
         statusBadge.classList.add('success');
         constructorName.textContent = data.Constructor_name || '—';
         customerName.textContent = data.Customer_name || '—';
@@ -266,7 +255,6 @@ function handleResponse(data) {
         customerName.classList.remove('empty');
         
     } else if (status === 'BAD' || status === 'NOT_FOUND' || status === 'NO_FOUND') {
-        // Не найдено
         statusBadge.classList.add('warning');
         constructorName.textContent = 'Не найдено';
         customerName.textContent = 'Не найдено';
@@ -274,7 +262,6 @@ function handleResponse(data) {
         customerName.classList.add('empty');
         
     } else if (status === 'FILE_IS_TOO_BIG') {
-        // Файл слишком большой
         statusBadge.classList.add('error');
         showError(`Файл слишком большой (максимум ${MAX_SIZE_MB} МБ)`);
         resultsArea.style.display = 'none';
@@ -282,8 +269,14 @@ function handleResponse(data) {
         submitBtn.disabled = true;
         return;
         
+    } else if (status === 'WRONG_FILE_FORMAT') {
+        statusBadge.classList.add('error');
+        showError('Неподдерживаемый формат файла. Используйте JPG или PNG');
+        resultsArea.style.display = 'none';
+        resultTime.style.display = 'none';
+        return;
+        
     } else if (status === 'ERROR') {
-        // Ошибка сервера
         statusBadge.classList.add('error');
         constructorName.textContent = 'Ошибка сервера';
         customerName.textContent = 'Ошибка сервера';
@@ -291,13 +284,11 @@ function handleResponse(data) {
         customerName.classList.add('empty');
         
     } else {
-        // Неизвестный статус
         statusBadge.classList.add('error');
         constructorName.textContent = `Неизвестный статус: ${data.Status}`;
         customerName.textContent = 'Ошибка';
         constructorName.classList.add('empty');
         customerName.classList.add('empty');
-        console.warn('Неизвестный статус:', data.Status);
     }
 }
 
@@ -308,7 +299,6 @@ function showError(message) {
     resultsArea.style.display = 'none';
     resultTime.style.display = 'none';
     
-    // Автоскрытие через 5 секунд
     clearTimeout(window.errorTimeout);
     window.errorTimeout = setTimeout(() => {
         errorArea.style.display = 'none';
@@ -316,39 +306,38 @@ function showError(message) {
 }
 
 // Очистка результатов
-clearResults.addEventListener('click', () => {
-    resultsArea.style.display = 'none';
-    currentResult = null;
-    constructorName.textContent = '—';
-    customerName.textContent = '—';
-    constructorName.classList.remove('empty');
-    customerName.classList.remove('empty');
-    resultTime.style.display = 'none';
-    clearFile();
-});
+if (clearResults) {
+    clearResults.addEventListener('click', () => {
+        resultsArea.style.display = 'none';
+        currentResult = null;
+        constructorName.textContent = '—';
+        customerName.textContent = '—';
+        constructorName.classList.remove('empty');
+        customerName.classList.remove('empty');
+        resultTime.style.display = 'none';
+        clearFile();
+    });
+}
 
 // Скачивание результата
-downloadResult.addEventListener('click', () => {
-    if (!currentResult) return;
-    
-    const data = {
-        timestamp: new Date().toISOString(),
-        processing_time: finalTime.textContent,
-        result: currentResult
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `result_${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-});
-
-// Обработка ошибок глобально
-window.addEventListener('unhandledrejection', (event) => {
-    showError(`Необработанная ошибка: ${event.reason}`);
-});
+if (downloadResult) {
+    downloadResult.addEventListener('click', () => {
+        if (!currentResult) return;
+        
+        const data = {
+            timestamp: new Date().toISOString(),
+            processing_time: finalTime.textContent,
+            result: currentResult
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `result_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+}

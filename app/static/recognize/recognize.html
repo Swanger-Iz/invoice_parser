@@ -5,93 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PaddleOCR - Распознавание</title>
     <link rel="stylesheet" href="/static/style.css">
-    <style>
-        /* Дополнительные стили для времени выполнения */
-        .processing-time {
-            display: none;
-            text-align: center;
-            padding: 12px;
-            background: #ebf8ff;
-            border-radius: 10px;
-            margin-top: 16px;
-            color: #2b6cb0;
-            font-weight: 500;
-            font-size: 14px;
-            border: 1px solid #bee3f8;
-        }
-        
-        .processing-time.active {
-            display: block;
-            animation: slideDown 0.3s ease;
-        }
-        
-        .processing-time .time-value {
-            font-weight: 700;
-            color: #2c5282;
-        }
-        
-        .processing-time .spinner-small {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #bee3f8;
-            border-top: 2px solid #2b6cb0;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-        
-        /* Стили для размера файла */
-        .file-size.over-limit {
-            color: #dc3545 !important;
-            background: #fed7d7 !important;
-            font-weight: 700;
-        }
-        
-        .file-size.under-limit {
-            color: #48bb78 !important;
-            background: #e6fffa !important;
-        }
-        
-        /* Анимация для результатов */
-        @keyframes fadeInResult {
-            from {
-                opacity: 0;
-                transform: translateY(20px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        
-        .result-item {
-            animation: fadeInResult 0.5s ease forwards;
-            opacity: 0;
-        }
-        
-        .result-item:nth-child(1) { animation-delay: 0.1s; }
-        .result-item:nth-child(2) { animation-delay: 0.2s; }
-        
-        /* Статус выполнения */
-        .status-processing {
-            background: #bee3f8 !important;
-            color: #2b6cb0 !important;
-        }
-        
-        /* Улучшенный вид ошибки */
-        .error-area {
-            animation: shake 0.5s ease;
-        }
-        
-        /* Таймер выполнения */
-        .timer-display {
-            font-size: 13px;
-            color: #4a5568;
-            margin-top: 8px;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/recognize/style.css">
 </head>
 <body>
     <div class="container">
@@ -101,6 +15,8 @@
                 <a href="/" class="breadcrumb-item">🏠 Главная</a>
                 <span class="breadcrumb-separator">›</span>
                 <span class="breadcrumb-item active">📄 Распознавание</span>
+                <span class="breadcrumb-separator">›</span>
+                <a href="/requests" class="breadcrumb-item">📚 Запросы</a>
             </nav>
 
             <!-- Заголовок -->
@@ -116,7 +32,7 @@
                     <div class="upload-icon">📤</div>
                     <h3>Перетащите изображение сюда</h3>
                     <p>или кликните для выбора файла</p>
-                    <span class="file-info">Поддерживаются: JPG, PNG, BMP, TIFF (до 20 МБ)</span>
+                    <span class="file-info">Поддерживаются: JPG, PNG (до 20 МБ)</span>
                 </div>
                 <input type="file" id="fileInput" accept="image/*" hidden>
             </div>
@@ -158,7 +74,6 @@
                     <div class="result-value" id="customerName">—</div>
                 </div>
 
-                <!-- Время выполнения результата -->
                 <div class="timer-display" id="resultTime" style="display: none;">
                     ⏱️ Время обработки: <strong id="finalTime">0.0</strong> секунд
                 </div>
@@ -184,5 +99,6 @@
     </div>
 
     <script src="/static/script.js"></script>
+    <script src="/static/recognize/script.js"></script>
 </body>
 </html>
