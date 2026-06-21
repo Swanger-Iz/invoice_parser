@@ -15,9 +15,6 @@ from langchain.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import InjectedToolArg, tool
 from langchain_openrouter import ChatOpenRouter
-from paddleocr import PaddleOCR
-from PIL import Image
-
 from models.config import (
     chat_model_name,
     detection_dir_path,
@@ -25,7 +22,9 @@ from models.config import (
     recognition_dir_path,
     system_prompt,
 )
-from schemas.main_schemas import ResponseFormat
+from paddleocr import PaddleOCR
+from PIL import Image
+from schemas.main_schemas import ModelResponseFormat
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class ExtractionAgent:
             model=ChatOpenRouter(model=chat_model_name, temperature=0, api_key=os.getenv("OPENROUTER_API_KEY")),
             tools=[self.image_parser],
             system_prompt=system_prompt,
-            response_format=ResponseFormat,
+            response_format=ModelResponseFormat,
             # debug=True,
         )
 

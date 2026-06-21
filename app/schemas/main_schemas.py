@@ -1,20 +1,23 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from database.models import UserRequestsORM
+from pydantic import BaseModel, ConfigDict, Field
 
-from db.db_tables import UserRequestsORM
 
-
-class ResponseFormat(BaseModel):
+# For LLM response
+class ModelResponseFormat(BaseModel):
     constructor_name: str | None = Field(None, description="ФИО исполнителя", min_length=2)
     customer_name: str | None = Field(None, description="ФИО заказчика", min_length=2)
 
 
-# Caching
-class ModelRequests(ResponseFormat):
-    id: int = Field(default=0, description="request_id")
+# DTOs
+class RequestsPostDTO(BaseModel):
     status: Literal["SUCCESS", "BAD"]
     image_bytes: bytes
+    constructor_name: str | None = Field(None, description="ФИО исполнителя", min_length=2)
+    customer_name: str | None = Field(None, description="ФИО заказчика", min_length=2)
+
+    model_config = ConfigDict(from_attributes=True)
 
     def to_orm(self) -> "UserRequestsORM":
         """Конвертирует Pydantic-схему в ORM-модель."""
@@ -27,7 +30,7 @@ class ModelRequests(ResponseFormat):
     # Ключевой момент: from_orm() не трогает существующие данные.
     # Он просто читает поля из ORM-объекта и создает новый независимый объект Pydantic.
     @classmethod
-    def from_orm(cls, orm_model: "UserRequestsORM") -> "ModelRequests":
+    def from_orm(cls, orm_model: "UserRequestsORM") -> "RequestsPostDTO":
         """Создает Pydantic-схему из ORM-объекта."""
         return cls(
             id=orm_model.id,
@@ -36,3 +39,18 @@ class ModelRequests(ResponseFormat):
             constructor_name=orm_model.constructor_name,
             customer_name=orm_model.customer_name,
         )
+
+
+class RequestsAllDTO(RequestsPostDTO):
+    id: int
+
+
+class GetImageDTO(BaseModel):
+    image_bytes: bytes
+
+
+class RequestPreviewDTO(BaseModel):
+    constructor_name: str | None = Field(None, description="ФИО исполнителя", min_length=2)
+    customer_name: str | None = Field(None, description="ФИО заказчика", min_length=2)
+
+    model_config = ConfigDict(from_attributes=True)
