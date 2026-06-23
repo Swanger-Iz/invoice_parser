@@ -1,7 +1,10 @@
 from database.dependencies import SessionDep
 from database.models import UserRequestsORM
-from schemas.main_schemas import GetImageDTO, RequestPreviewDTO
+from logger import setup_logger
+from schemas.main_schemas import GetImageDTO, GetImageHashDTO, RequestPreviewDTO
 from sqlalchemy import select
+
+logger = setup_logger(__name__)
 
 ### Нельзя использовать f строки, чтобы защититься от SQL инъекций
 # Пример 1.
@@ -40,19 +43,18 @@ class DQL_queries:
         Returns:
             list: [constructor_name, customer_name, image_bytes]
         """
-        try:
-            query = select(UserRequestsORM.constructor_name, UserRequestsORM.customer_name)
-            res = await session.execute(query)
-            rows = res.all()
-            validated_rows = [RequestPreviewDTO.model_validate(row, from_attributes=True) for row in rows]
-            print(validated_rows)
-            return validated_rows
-        except Exception as e:
-            print(f"Error: {e}")
-            raise
+        query = select(UserRequestsORM.constructor_name, UserRequestsORM.customer_name)
+        res = await session.execute(query)
+        rows = res.all()
+        if len(rows) == 0:
+            return None
+
+        validated_rows = [RequestPreviewDTO.model_validate(row, from_attributes=True) for row in rows]
+        logger.info(validated_rows)
+        return validated_rows
 
     @staticmethod
-    async def get_preview_request_data_by_id(session: SessionDep, request_id: int) -> RequestPreviewDTO:
+    async def get_preview_request_data_by_id(session: SessionDep, request_id: int) -> RequestPreviewDTO | None:
         """Получить: constructor_name, customer_name, image_bytes
             для опдереденного request_id.
 
@@ -61,32 +63,41 @@ class DQL_queries:
         """
         ### получим один объект
         # customer = session.get(UserRequestsORM, request_id)
-        try:
-            ### Получаем неск объектов
-            query = (
-                select(UserRequestsORM.constructor_name, UserRequestsORM.customer_name)
-                # .select_from(UserRequestsORM)
-                .filter(UserRequestsORM.id == request_id)
-            )  # .compile(compile_kwargs={"literal_binds": True})
-            result = await session.execute(query)
+        ### Получаем неск объектов
+        query = (
+            select(UserRequestsORM.constructor_name, UserRequestsORM.customer_name)
+            # .select_from(UserRequestsORM)
+            .filter(UserRequestsORM.id == request_id)
+        )  # .compile(compile_kwargs={"literal_binds": True})
+        result = await session.execute(query)
 
-            row = result.one_or_none()
+        row = result.one_or_none()
 
-            if row is None:
-                return None
-            validated_row = RequestPreviewDTO.model_validate(row, from_attributes=True)
-            print("RESPONSE:", validated_row)
-            return validated_row
-        except Exception as e:
-            print(f"Error: {e}")
-            raise
+        if row is None:
+            return None
+
+        validated_row = RequestPreviewDTO.model_validate(row, from_attributes=True)
+        logger.info(f"RESPONSE: {validated_row}")
+        return validated_row
 
     @staticmethod
-    async def get_image_by_id(session: SessionDep, request_id: int) -> GetImageDTO:
+    async def get_image_by_id(session: SessionDep, request_id: int) -> GetImageDTO | None:
         query = select(UserRequestsORM.image_bytes).where(UserRequestsORM.id == request_id)
         result = await session.execute(query)
 
-        row: bytes = result.one_or_none()
+        row = result.one_or_none()
         if row is None:
             return None
         return GetImageDTO.model_validate(row, from_attributes=True)
+
+    @staticmethod
+    async def get_image_by_hash(session: SessionDep, input_hash: str) -> GetImageHashDTO | None:
+        query = select(UserRequestsORM.image_hash, UserRequestsORM.constructor_name, UserRequestsORM.customer_name).where(
+            UserRequestsORM.image_hash == input_hash
+        )
+        result = await session.execute(query)
+        row = result.one_or_none()
+
+        if row is None:
+            return None
+        return GetImageHashDTO.model_validate(row, from_attributes=True)

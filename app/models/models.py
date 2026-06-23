@@ -1,13 +1,11 @@
+import asyncio
 import io
-import logging
 import os
 import time
 from typing import Annotated
 
-# import sys
-# from pathlib import Path
-# sys.path.insert(0, str(Path(__file__).parent.parent))
 import numpy as np
+from custom_errors import NoneError
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.agents.structured_output import StructuredOutputValidationError
@@ -15,6 +13,7 @@ from langchain.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import InjectedToolArg, tool
 from langchain_openrouter import ChatOpenRouter
+from logger import setup_logger
 from models.config import (
     chat_model_name,
     detection_dir_path,
@@ -26,16 +25,14 @@ from paddleocr import PaddleOCR
 from PIL import Image
 from schemas.main_schemas import ModelResponseFormat
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class ExtractionAgent:
-    # _instanse = None
-    # _initialized = False
 
     def __init__(self):
         load_dotenv()
-        print(".env vars set")
+        logger.info("\nENVIROMENT variables set, Starting loading a model!\n")
 
         self.ocr_model = self._init_PaddleOCR()
         self.image_parser = self._create_parser_tool(self.ocr_model)
@@ -93,34 +90,34 @@ class ExtractionAgent:
         return (messages, config)
 
     # llm invoke
-    def safely_exec_agent(self, attempts=3, image_in_bytes: bytes = None):
+    async def safely_exec_agent(self, attempts=3, image_in_bytes: bytes | None = None):
         if image_in_bytes is None:
-            return None
+            raise NoneError
         messages, config = self.init_llm_configs(image_bytes=image_in_bytes)
-        print("Safely starting the agent")
+        logger.info("\n\nSafely starting the agent")
         for attempt in range(attempts):
             start_time = time.time()
-            print(f"Attempt - {attempt+1}\n")
+            logger.info(f"\nAttempt - {attempt+1}\n")
             try:
-                response = self.agent.invoke({"messages": messages}, config=config)
-                print("=" * 20, "Success", "=" * 20)
-                print(f"Response time = {time.time() - start_time:.2f}")
+                response = await self.agent.ainvoke({"messages": messages}, config=config)
+                logger.info("=" * 20 + "Success" + "=" * 20)
+                logger.info(f"Response time = {time.time() - start_time:.2f}")
                 return response
             except StructuredOutputValidationError:
-                print(f"Попытка {attempt+1}: пустой/невалидный ответ модели, повтор...")
-                print(f"Response time = {time.time() - start_time:.2f}")
-                time.sleep(2)
+                logger.info(f"\nПопытка {attempt+1}: пустой/невалидный ответ модели, повтор, через 5 сек")
+                logger.info(f"Response time = {time.time() - start_time:.2f}")
+                await asyncio.sleep(5)
             except Exception as e:
                 if "TooManyRequests" in str(e):
-                    print(f"Response time = {time.time() - start_time:.2f}")
-                    print("Rate limit, try againg in 60 sec...")
+                    logger.info(f"Response time = {time.time() - start_time:.2f}")
+                    logger.info("\nRate limit, try againg in 60 sec...")
+                    raise Exception("Too many requests!!")
                 else:
-                    print("ERROR!")
-                    print(f"Response time = {time.time() - start_time:.2f}")
-            else:
-                print("ERROR!")
-        print("=" * 20, "Fail", "=" * 20)
-        print(f"Response time = {time.time() - start_time:.2f}")
+                    logger.info(f"\nERROR - {e}")
+                    logger.info(f"\nResponse time = {time.time() - start_time:.2f}")
+                    raise
+        logger.info("=" * 20 + "Fail" + "=" * 20)
+        logger.info(f"Response time = {time.time() - start_time:.2f}")
         return None
 
 

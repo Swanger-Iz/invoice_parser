@@ -1,7 +1,10 @@
 from typing import Literal
 
 from database.models import UserRequestsORM
+from logger import setup_logger
 from pydantic import BaseModel, ConfigDict, Field
+
+logger = setup_logger(__name__)
 
 
 # For LLM response
@@ -13,7 +16,8 @@ class ModelResponseFormat(BaseModel):
 # DTOs
 class RequestsPostDTO(BaseModel):
     status: Literal["SUCCESS", "BAD"]
-    image_bytes: bytes
+    image_bytes: bytes | None
+    image_hash: str | None
     constructor_name: str | None = Field(None, description="ФИО исполнителя", min_length=2)
     customer_name: str | None = Field(None, description="ФИО заказчика", min_length=2)
 
@@ -22,7 +26,13 @@ class RequestsPostDTO(BaseModel):
     def to_orm(self) -> "UserRequestsORM":
         """Конвертирует Pydantic-схему в ORM-модель."""
 
-        return UserRequestsORM(status=self.status, image_bytes=self.image_bytes, constructor_name=self.constructor_name, customer_name=self.customer_name)
+        return UserRequestsORM(
+            status=self.status,
+            image_bytes=self.image_bytes,
+            image_hash=self.image_hash,
+            constructor_name=self.constructor_name,
+            customer_name=self.customer_name,
+        )
 
     # from_orm() — это альтернативный конструктор.
     # На входе: принимает ORM-объект (UserRequestsORM)
@@ -47,6 +57,13 @@ class RequestsAllDTO(RequestsPostDTO):
 
 class GetImageDTO(BaseModel):
     image_bytes: bytes
+
+
+class GetImageHashDTO(BaseModel):
+    image_hash: str
+
+    constructor_name: str | None = Field(None, description="ФИО исполнителя", min_length=2)
+    customer_name: str | None = Field(None, description="ФИО заказчика", min_length=2)
 
 
 class RequestPreviewDTO(BaseModel):
