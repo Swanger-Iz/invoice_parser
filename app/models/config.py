@@ -1,5 +1,9 @@
 from pathlib import Path
 
+from logger import setup_logger
+
+logger = setup_logger(__name__)
+
 models_dir_path = Path(__file__).parent
 
 # Paths

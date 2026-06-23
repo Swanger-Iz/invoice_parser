@@ -1,4 +1,7 @@
+from logger import setup_logger
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = setup_logger(__name__)
 
 
 class Settings(BaseSettings):

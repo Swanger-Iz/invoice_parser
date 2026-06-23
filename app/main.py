@@ -1,10 +1,14 @@
 import uvicorn
 from api.v1.router import api_router
+from custom_errors import InsertingIntoDBError, NoneError
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from logger import setup_logger
+
+logger = setup_logger(__name__)
 
 # FastAPI
 app = FastAPI()
@@ -28,15 +32,27 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
-if __name__ == "__main__":
-    print("script running")
+@app.exception_handler(NoneError)
+async def none_error_handler(request: Request, exc: HTTPException):
+    JSONResponse(status_code=404, content={"error": "Invalid input", "detail": str(exc), "type": "NoneError"})
 
-    uvicorn.run("main:app", reload=True)
+
+@app.exception_handler(InsertingIntoDBError)
+async def inserting_into_db_handler(request: Request, exc: HTTPException):
+    JSONResponse(status_code=500, content={"error": "Cannot insert into DB", "detail": str(exc), "type": "InsertingIntoDBError"})
+
+
+if __name__ == "__main__":
+    try:
+        uvicorn.run("main:app", host="127.0.0.1", port=8000)
+    except Exception as e:
+        logger.info(f"Error - {e}")
+        raise
 
 
 ##### TESTS ######
 # invoice_ai_dir = Path(__file__).parent.parent
-# # print("Working directory:", str(invoice_ai_dir))
+# # logger.info("Working directory:", str(invoice_ai_dir))
 
 # # Init a image, test
 # image_path = invoice_ai_dir / "data" / "orion_agreement.png"

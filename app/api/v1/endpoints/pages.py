@@ -1,5 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
+from logger import setup_logger
+
+logger = setup_logger(__name__)
 
 router = APIRouter(tags=["Display"])
 

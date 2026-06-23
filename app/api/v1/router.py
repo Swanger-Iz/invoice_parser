@@ -1,5 +1,8 @@
 from api.v1.endpoints import get_fio, pages, requests
 from fastapi import APIRouter
+from logger import setup_logger
+
+logger = setup_logger(__name__)
 
 api_router = APIRouter()
 

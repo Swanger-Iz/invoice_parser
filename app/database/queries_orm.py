@@ -5,14 +5,31 @@ from pathlib import Path
 
 sys.path.insert(1, str(Path(__file__).parent.parent))
 
-from database.dependencies import async_engine, async_session_factory
+from custom_errors import InsertingIntoDBError
+from database.dependencies import SessionDep, async_engine
 from database.models import Base, metadata_obj
-from queries_core import DQL_queries
-from schemas.main_schemas import RequestsAllDTO
+from logger import setup_logger
+from schemas.main_schemas import RequestsPostDTO
+
+logger = setup_logger(__name__)
 
 response_list = [
-    RequestsAllDTO(id=1, status="SUCCESS", constructor_name="Кучков Игорь Маркович", customer_name="Валеев Артур Хамзадович", image_bytes=bytes(10)),
-    RequestsAllDTO(id=2, status="SUCCESS", constructor_name="Горемыкин Артем Динисович", customer_name="Уразбахтин Тимур Фанильевич", image_bytes=bytes(12)),
+    RequestsPostDTO(
+        # id=1,
+        status="BAD",
+        image_bytes=bytes(10),
+        image_hash="1234g3d12dwe1dd",
+        constructor_name="Кучков Игорь Маркович",
+        customer_name="Валеев Артур Хамзадович",
+    ),
+    RequestsPostDTO(
+        # id=2,
+        status="SUCCESS",
+        image_bytes=bytes(12),
+        image_hash="fdasfdasfdas",
+        constructor_name="Горемыкин Артем Динисович",
+        customer_name="Уразбахтин Тимур Фанильевич",
+    ),
 ]
 
 
@@ -32,43 +49,36 @@ class DDL_queries:
 #### DML ####
 class DML_queries:
     @staticmethod
-    async def insert_new_data_to_user_requests(requests: list[RequestsAllDTO]):
-        rows = [req.to_orm() for req in requests]
+    async def insert_new_data_to_user_requests(row: RequestsPostDTO, session: SessionDep) -> bool:
         try:
-            async with async_session_factory() as session:
-                # session.add()
-                session.add_all(rows)
-                await session.commit()
+            row = row.to_orm()
+            session.add(row)
+            # session.add_all(rows)
+            await session.commit()
 
-                print(f"✅ Вставлено {len(rows)} записей")
-                return True
+            logger.info(f"GOOD: Вставлена строка: {row}")
+            return True
         except Exception as e:
-            print(f"❌ Ошибка вставки: {e}")
-            return None
+            logger.info(f"BAD: Ошибка вставки: {e}")
+            raise InsertingIntoDBError
 
 
 ###### TESTS #######
-import asyncio
 
 
 # from queries import get_all_request_data, get_basic_request_data_by_id
-async def main():
-    await DDL_queries.truncate_tables()
-    await DDL_queries.create_table_user_requests()
-    await DML_queries.insert_new_data_to_user_requests(response_list)
-    # await DQL_queries.get_all_request_data()
-    await DQL_queries.get_preview_request_data_by_id(2)
 
 
-# print("Launching: create_table__user_requests")
+# await DML_queries.insert_new_data_to_user_requests(response_list)
+# await DQL_queries.get_all_request_data()
+# await DQL_queries.get_preview_request_data_by_id(2)
+
+
+# logger.info("Launching: create_table__user_requests")
 # await create_table__user_requests()
 
-# print("Launching: insert_data_to__user_requests")
+# logger.info("Launching: insert_data_to__user_requests")
 # await insert_data_to__user_requests(response_list)
 # await get_basic_request_data_by_id(2)
 # await get_all_request_data()
 # ...
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

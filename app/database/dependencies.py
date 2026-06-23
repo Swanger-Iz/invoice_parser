@@ -4,7 +4,11 @@ from typing import Annotated
 
 from database.config import settings
 from fastapi import Depends
+from logger import setup_logger
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+logger = setup_logger(__name__)
+
 
 # Нужен для DDL операций имеет .run_sync()
 async_engine = create_async_engine(
@@ -25,7 +29,7 @@ async def get_session():
         except Exception:
             await session.rollback()
             raise
-            # print(f"Error: {e}")
+            # logger.info(f"Error: {e}")
 
 
 # Depency Injection
