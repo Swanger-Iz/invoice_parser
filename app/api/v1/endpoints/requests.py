@@ -10,7 +10,7 @@ logger = setup_logger(__name__)
 router = APIRouter(prefix="/requests", tags=["List of Requests"])
 
 
-@router.get("/", tags=["Display"], summary="Get all requests")
+@router.get("/", summary="Get all requests")
 async def get_all_requests(session: SessionDep) -> list[RequestPreviewDTO]:
     validated_rows = await DQL_queries.get_all_request_data(session)
     if validated_rows is None:
@@ -18,7 +18,7 @@ async def get_all_requests(session: SessionDep) -> list[RequestPreviewDTO]:
     return validated_rows
 
 
-@router.get("/{request_id}", tags=["Display"], summary="Get request by id")
+@router.get("/{request_id}", summary="Get request by id")
 async def get_request(session: SessionDep, request_id: str) -> RequestPreviewDTO | None:
     try:
         request_id = int(request_id)
@@ -43,7 +43,7 @@ async def get_request_image(session: SessionDep, request_id: str):
     try:
         request_id = int(request_id)
     except Exception:
-        raise HTTPException(status_code=403, detail=f"Invalid {request_id} value, must be value")
+        raise HTTPException(status_code=403, detail=f"Invalid {request_id} value, must be numeric")
 
     response = await DQL_queries.get_image_by_id(session, request_id)
     image_bytes = response.image_bytes

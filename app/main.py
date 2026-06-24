@@ -27,9 +27,9 @@ app.include_router(api_router)
 @app.exception_handler(404)
 async def http_exception_handler(request: Request, exc: HTTPException):
     if exc.status_code == 404:
-        return FileResponse("app/static/error404.html", status_code=404)
+        return FileResponse("app/static/404/404.html", status_code=404)
     else:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+        return exc
 
 
 @app.exception_handler(NoneError)

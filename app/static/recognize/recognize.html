@@ -1,104 +1,59 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PaddleOCR - Распознавание</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="/static/recognize/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Распознавание — Invoice AI</title>
+  <link rel="stylesheet" href="/static/global.css" />
+  <link rel="stylesheet" href="/static/recognize/recognize.css" />
 </head>
 <body>
-    <div class="container">
-        <div class="glass-card">
-            <!-- Навигация -->
-            <nav class="breadcrumb">
-                <a href="/" class="breadcrumb-item">🏠 Главная</a>
-                <span class="breadcrumb-separator">›</span>
-                <span class="breadcrumb-item active">📄 Распознавание</span>
-                <span class="breadcrumb-separator">›</span>
-                <a href="/requests" class="breadcrumb-item">📚 Запросы</a>
-            </nav>
 
-            <!-- Заголовок -->
-            <div class="header">
-                <div class="badge">📄 PaddleOCR</div>
-                <h1>Распознавание документа</h1>
-                <p class="subtitle">Загрузите изображение для извлечения данных</p>
-            </div>
+<nav class="nav">
+  <span class="nav-brand">invoice<span>_</span>ai</span>
+  <div class="nav-links">
+    <a href="/"           class="nav-link">Главная</a>
+    <a href="/recognize"  class="nav-link">Распознавание</a>
+    <a href="/requests"   class="nav-link">Запросы</a>
+  </div>
+</nav>
 
-            <!-- Область загрузки -->
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-content">
-                    <div class="upload-icon">📤</div>
-                    <h3>Перетащите изображение сюда</h3>
-                    <p>или кликните для выбора файла</p>
-                    <span class="file-info">Поддерживаются: JPG, PNG (до 20 МБ)</span>
-                </div>
-                <input type="file" id="fileInput" accept="image/*" hidden>
-            </div>
+<div class="page">
+  <div class="page-header">
+    <p class="label">распознавание</p>
+    <h2>Загрузить документ</h2>
+  </div>
 
-            <!-- Информация о файле -->
-            <div class="file-info-area" id="fileInfo" style="display: none;">
-                <div class="file-details">
-                    <span class="file-name" id="fileName">image.jpg</span>
-                    <span class="file-size under-limit" id="fileSize">2.5 МБ</span>
-                </div>
-                <button class="btn-remove" id="removeFile">✕</button>
-            </div>
-
-            <!-- Кнопка отправки -->
-            <button class="btn-submit" id="submitBtn" disabled>
-                <span>🔍</span> Распознать
-            </button>
-
-            <!-- Время выполнения -->
-            <div class="processing-time" id="processingTime">
-                <span class="spinner-small"></span>
-                Выполняется запрос... <span class="time-value" id="elapsedTime">0.0</span> с
-            </div>
-
-            <!-- Результаты -->
-            <div class="results-area" id="resultsArea" style="display: none;">
-                <div class="results-header">
-                    <span class="results-title">📊 Результаты распознавания</span>
-                    <span class="status-badge" id="statusBadge">Успешно</span>
-                </div>
-
-                <div class="result-item">
-                    <div class="result-label">👷 Конструктор</div>
-                    <div class="result-value" id="constructorName">—</div>
-                </div>
-
-                <div class="result-item">
-                    <div class="result-label">👤 Заказчик</div>
-                    <div class="result-value" id="customerName">—</div>
-                </div>
-
-                <div class="timer-display" id="resultTime" style="display: none;">
-                    ⏱️ Время обработки: <strong id="finalTime">0.0</strong> секунд
-                </div>
-
-                <div class="result-actions">
-                    <button class="btn-clear" id="clearResults">Очистить</button>
-                    <button class="btn-download" id="downloadResult">Скачать результат</button>
-                </div>
-            </div>
-
-            <!-- Ошибки -->
-            <div class="error-area" id="errorArea" style="display: none;">
-                <div class="error-icon">⚠️</div>
-                <div class="error-message" id="errorMessage">Ошибка обработки</div>
-            </div>
-
-            <!-- Футер -->
-            <div class="footer">
-                <span>⚡ FastAPI + PaddleOCR + LangChain</span>
-                <span id="timestamp"></span>
-            </div>
-        </div>
+  <div class="card upload-card" id="uploadCard">
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">↑</div>
+      <p class="drop-text">Перетащите файл или <label for="fileInput" class="file-label">выберите изображение</label></p>
+      <p class="label">JPG, JPEG, PNG · до 20 МБ</p>
+      <input type="file" id="fileInput" accept=".jpg,.jpeg,.png" hidden />
     </div>
 
-    <script src="/static/script.js"></script>
-    <script src="/static/recognize/script.js"></script>
+    <div class="preview-wrap" id="previewWrap" hidden>
+      <div class="preview-img-wrap">
+        <img id="previewImg" alt="preview" style="display:none" />
+        <div class="preview-placeholder" id="previewPlaceholder">
+          <span>🖼</span>
+        </div>
+      </div>
+      <div class="preview-meta">
+        <span id="previewName" class="label"></span>
+        <button class="btn btn-ghost btn-sm" id="clearBtn">Удалить</button>
+      </div>
+    </div>
+
+    <div class="upload-footer">
+      <button class="btn btn-primary" id="submitBtn" disabled>
+        Распознать
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/global.js"></script>
+<script src="/static/recognize/recognize.js"></script>
 </body>
 </html>

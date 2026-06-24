@@ -43,7 +43,7 @@ class DQL_queries:
         Returns:
             list: [constructor_name, customer_name, image_bytes]
         """
-        query = select(UserRequestsORM.constructor_name, UserRequestsORM.customer_name)
+        query = select(UserRequestsORM.id, UserRequestsORM.constructor_name, UserRequestsORM.customer_name)
         res = await session.execute(query)
         rows = res.all()
         if len(rows) == 0:
@@ -65,7 +65,7 @@ class DQL_queries:
         # customer = session.get(UserRequestsORM, request_id)
         ### Получаем неск объектов
         query = (
-            select(UserRequestsORM.constructor_name, UserRequestsORM.customer_name)
+            select(UserRequestsORM.id, UserRequestsORM.constructor_name, UserRequestsORM.customer_name)
             # .select_from(UserRequestsORM)
             .filter(UserRequestsORM.id == request_id)
         )  # .compile(compile_kwargs={"literal_binds": True})
