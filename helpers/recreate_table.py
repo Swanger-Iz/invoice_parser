@@ -1,4 +1,8 @@
 import asyncio
+import sys
+from pathlib import Path
+
+sys.path.insert(1, str(Path(__file__).parent.parent))
 
 from app.database.queries_orm import DDL_queries
 

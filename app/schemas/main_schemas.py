@@ -67,7 +67,15 @@ class GetImageHashDTO(BaseModel):
 
 
 class RequestPreviewDTO(BaseModel):
+    id: int | None = None
     constructor_name: str | None = Field(None, description="ФИО исполнителя", min_length=2)
     customer_name: str | None = Field(None, description="ФИО заказчика", min_length=2)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TaskResponseDTO(BaseModel):
+    task_id: str
+    status: Literal["in_process", "success", "error"] | None
 
     model_config = ConfigDict(from_attributes=True)

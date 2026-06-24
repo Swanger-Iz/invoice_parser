@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Invoice AI</title>
+  <link rel="stylesheet" href="/static/global.css" />
+  <link rel="stylesheet" href="/static/404/404.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">invoice<span>_</span>ai</span>
+  <div class="nav-links">
+    <a href="/"          class="nav-link">Главная</a>
+    <a href="/recognize" class="nav-link">Распознавание</a>
+    <a href="/requests"  class="nav-link">Запросы</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="not-found">
+    <pre class="glitch" data-text="404">404</pre>
+    <p class="nf-title">Страница не найдена</p>
+    <p class="nf-sub">Запрошенный маршрут не существует или был удалён.</p>
+    <div class="nf-path" id="nfPath"></div>
+    <div class="nf-actions">
+      <a href="/" class="btn btn-primary">На главную</a>
+      <button class="btn btn-ghost" onclick="history.back()">← Назад</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/global.js"></script>
+<script>
+  document.getElementById('nfPath').textContent = window.location.pathname;
+</script>
+</body>
+</html>

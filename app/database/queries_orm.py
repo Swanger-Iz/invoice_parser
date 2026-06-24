@@ -13,24 +13,24 @@ from schemas.main_schemas import RequestsPostDTO
 
 logger = setup_logger(__name__)
 
-response_list = [
-    RequestsPostDTO(
-        # id=1,
-        status="BAD",
-        image_bytes=bytes(10),
-        image_hash="1234g3d12dwe1dd",
-        constructor_name="Кучков Игорь Маркович",
-        customer_name="Валеев Артур Хамзадович",
-    ),
-    RequestsPostDTO(
-        # id=2,
-        status="SUCCESS",
-        image_bytes=bytes(12),
-        image_hash="fdasfdasfdas",
-        constructor_name="Горемыкин Артем Динисович",
-        customer_name="Уразбахтин Тимур Фанильевич",
-    ),
-]
+# response_list = [
+#     RequestsPostDTO(
+#         # id=1,
+#         status="BAD",
+#         image_bytes=bytes(10),
+#         image_hash="1234g3d12dwe1dd",
+#         constructor_name="Кучков Игорь Маркович",
+#         customer_name="Валеев Артур Хамзадович",
+#     ),
+#     RequestsPostDTO(
+#         # id=2,
+#         status="SUCCESS",
+#         image_bytes=bytes(12),
+#         image_hash="fdasfdasfdas",
+#         constructor_name="Горемыкин Артем Динисович",
+#         customer_name="Уразбахтин Тимур Фанильевич",
+#     ),
+# ]
 
 
 #### DDL ####
@@ -56,9 +56,10 @@ class DML_queries:
             # session.add_all(rows)
             await session.commit()
 
-            logger.info(f"GOOD: Вставлена строка: {row}")
+            logger.info("GOOD: Вставлена строка!")
             return True
         except Exception as e:
+            session.rollback()
             logger.info(f"BAD: Ошибка вставки: {e}")
             raise InsertingIntoDBError
 

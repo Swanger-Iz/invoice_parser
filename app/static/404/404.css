@@ -1,0 +1,89 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px);
+}
+
+.not-found {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Glitch */
+.glitch {
+  font-family: var(--mono);
+  font-size: clamp(5rem, 20vw, 9rem);
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1;
+  position: relative;
+  letter-spacing: -0.04em;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  font: inherit;
+}
+
+.glitch::before {
+  color: var(--accent);
+  clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
+  animation: glitch-top 3.5s infinite steps(1);
+}
+
+.glitch::after {
+  color: var(--error);
+  clip-path: polygon(0 60%, 100% 60%, 100% 75%, 0 75%);
+  animation: glitch-bot 3.5s infinite steps(1) 0.4s;
+}
+
+@keyframes glitch-top {
+  0%, 90%, 100% { transform: translate(0); opacity: 0; }
+  92%            { transform: translate(-4px, -2px); opacity: 1; }
+  94%            { transform: translate(4px, 0);     opacity: 1; }
+  96%            { transform: translate(-2px, 1px);  opacity: 1; }
+  98%            { transform: translate(0);           opacity: 0; }
+}
+
+@keyframes glitch-bot {
+  0%, 88%, 100% { transform: translate(0); opacity: 0; }
+  90%            { transform: translate(4px, 2px);  opacity: 1; }
+  93%            { transform: translate(-3px, 0);   opacity: 1; }
+  96%            { transform: translate(2px, -1px); opacity: 1; }
+  98%            { transform: translate(0);          opacity: 0; }
+}
+
+.nf-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.nf-sub {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  max-width: 360px;
+}
+
+.nf-path {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.35rem 0.85rem;
+}
+
+.nf-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}

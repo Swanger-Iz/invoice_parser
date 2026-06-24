@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>История запросов — Invoice AI</title>
+  <link rel="stylesheet" href="/static/global.css" />
+  <link rel="stylesheet" href="/static/requests/requests.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">invoice<span>_</span>ai</span>
+  <div class="nav-links">
+    <a href="/"           class="nav-link">Главная</a>
+    <a href="/recognize"  class="nav-link">Распознавание</a>
+    <a href="/requests"   class="nav-link">Запросы</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <p class="label">история</p>
+    <div class="header-row">
+      <h2>Запросы</h2>
+      <a href="/recognize" class="btn btn-primary">+ Новый</a>
+    </div>
+  </div>
+
+  <div class="card" id="tableCard">
+    <div class="table-wrap">
+      <table id="requestsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Конструктор</th>
+            <th>Заказчик</th>
+            <th>Статус</th>
+            <th>Изображение</th>
+          </tr>
+        </thead>
+        <tbody id="requestsBody">
+          <tr>
+            <td colspan="5">
+              <div class="empty">Загрузка…</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Detail panel -->
+  <div class="detail-card card" id="detailCard" hidden>
+    <div class="detail-header">
+      <span class="label">запрос <span id="detailId"></span></span>
+      <button class="btn btn-ghost btn-sm" id="closeDetail">✕ закрыть</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-image-wrap">
+        <img id="detailImage" alt="документ" />
+      </div>
+      <div class="detail-fields">
+        <div class="field">
+          <span class="label">Конструктор</span>
+          <span id="detailConstructor" class="field-value">—</span>
+        </div>
+        <div class="field">
+          <span class="label">Заказчик</span>
+          <span id="detailCustomer" class="field-value">—</span>
+        </div>
+        <div class="field">
+          <span class="label">Статус</span>
+          <span id="detailStatus"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/global.js"></script>
+<script src="/static/requests/requests.js"></script>
+</body>
+</html>

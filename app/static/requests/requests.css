@@ -1,0 +1,75 @@
+.page-header { margin-bottom: 1.75rem; }
+.page-header .label { margin-bottom: 0.4rem; display: block; }
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-row h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Table id col */
+td:first-child {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  width: 48px;
+}
+
+/* Detail card */
+.detail-card {
+  margin-top: 1rem;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.detail-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.detail-image-wrap img {
+  width: 220px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.detail-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.field-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.btn-sm { padding: 0.3rem 0.75rem; font-size: 0.8rem; }
+
+@media (max-width: 600px) {
+  .detail-body { grid-template-columns: 1fr; }
+  .detail-image-wrap img { width: 100%; height: auto; }
+}

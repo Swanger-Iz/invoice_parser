@@ -1,70 +1,58 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PaddleOCR - Главная</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="/static/index/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice AI</title>
+  <link rel="stylesheet" href="/static/global.css" />
+  <link rel="stylesheet" href="/static/index/index.css" />
 </head>
 <body>
-    <div class="container">
-        <div class="glass-card">
-            <!-- Навигация -->
-            <nav class="breadcrumb">
-                <span class="breadcrumb-item active">🏠 Главная</span>
-                <span class="breadcrumb-separator">›</span>
-                <a href="/recognize" class="breadcrumb-item">📄 Распознавание</a>
-                <span class="breadcrumb-separator">›</span>
-                <a href="/requests" class="breadcrumb-item">📚 Запросы</a>
-            </nav>
 
-            <!-- Заголовок -->
-            <div class="header">
-                <div class="badge">🚀 PaddleOCR</div>
-                <h1>Добро пожаловать!</h1>
-                <p class="subtitle">Система распознавания документов</p>
-            </div>
+<nav class="nav">
+  <span class="nav-brand">invoice<span>_</span>ai</span>
+  <div class="nav-links">
+    <a href="/"           class="nav-link">Главная</a>
+    <a href="/recognize"  class="nav-link">Распознавание</a>
+    <a href="/requests"   class="nav-link">Запросы</a>
+  </div>
+</nav>
 
-            <!-- Контент -->
-            <div class="content">
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">📸</div>
-                        <h3>Загрузка изображений</h3>
-                        <p>Поддерживаются JPG, PNG, BMP, TIFF</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">🧠</div>
-                        <h3>Распознавание</h3>
-                        <p>Извлечение данных с помощью PaddleOCR</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3>Результаты</h3>
-                        <p>Отображение конструктора и заказчика</p>
-                    </div>
-                </div>
-
-                <div class="cta-section">
-                    <p>Готовы начать распознавание?</p>
-                    <a href="/recognize" class="btn-primary-link">
-                        <span>🚀</span> Перейти к распознаванию
-                    </a>
-                </div>
-            </div>
-
-            <!-- Футер -->
-            <div class="footer">
-                <span>⚡ FastAPI + PaddleOCR + LangChain</span>
-                <span id="timestamp"></span>
-            </div>
-        </div>
+<div class="page">
+  <div class="hero">
+    <p class="label">invoice_ai / v1</p>
+    <h1>Извлечение ФИО<br>из счетов-фактур</h1>
+    <p class="hero-desc">
+      Загрузите изображение счёта — модель извлечёт имя конструктора
+      и заказчика. Результат сохраняется и доступен в истории запросов.
+    </p>
+    <div class="hero-actions">
+      <a href="/recognize" class="btn btn-primary">Распознать документ</a>
+      <a href="/requests"  class="btn btn-ghost">История запросов</a>
     </div>
+  </div>
 
-    <script src="/static/script.js"></script>
-    <script src="/static/index/script.js"></script>
+  <hr class="divider" />
+
+  <div class="features">
+    <div class="feature-card card">
+      <span class="feature-icon">⚡</span>
+      <h3>Фоновая обработка</h3>
+      <p>Запрос к модели выполняется асинхронно — интерфейс не блокируется.</p>
+    </div>
+    <div class="feature-card card">
+      <span class="feature-icon">🗄️</span>
+      <h3>Кэширование</h3>
+      <p>Повторная загрузка того же изображения возвращает результат мгновенно из базы.</p>
+    </div>
+    <div class="feature-card card">
+      <span class="feature-icon">📋</span>
+      <h3>История</h3>
+      <p>Все распознанные документы хранятся и доступны по ID с превью изображения.</p>
+    </div>
+  </div>
+</div>
+
+<script src="/static/global.js"></script>
 </body>
 </html>
