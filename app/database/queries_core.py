@@ -37,11 +37,11 @@ logger = setup_logger(__name__)
 class DQL_queries:
     @staticmethod
     async def get_all_request_data(session: SessionDep) -> list[RequestPreviewDTO] | None:
-        """Получить: constructor_name, customer_name, image_bytes
+        """Получить: id, constructor_name, customer_name
             для всех записей.
 
         Returns:
-            list: [constructor_name, customer_name, image_bytes]
+            list: [id, constructor_name, customer_name]
         """
         query = select(UserRequestsORM.id, UserRequestsORM.constructor_name, UserRequestsORM.customer_name)
         res = await session.execute(query)
@@ -55,11 +55,11 @@ class DQL_queries:
 
     @staticmethod
     async def get_preview_request_data_by_id(session: SessionDep, request_id: int) -> RequestPreviewDTO | None:
-        """Получить: constructor_name, customer_name, image_bytes
+        """Получить: constructor_name, customer_name
             для опдереденного request_id.
 
         Returns:
-            (constructor_name, customer_name, image_bytes)
+            (id, constructor_name, customer_name)
         """
         ### получим один объект
         # customer = session.get(UserRequestsORM, request_id)

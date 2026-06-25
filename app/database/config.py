@@ -5,6 +5,8 @@ logger = setup_logger(__name__)
 
 
 class Settings(BaseSettings):
+    MODE: str
+
     DB_HOST: str
     DB_PORT: str
     DB_USER: str

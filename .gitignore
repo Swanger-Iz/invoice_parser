@@ -7,8 +7,12 @@ data
 
 # eviroments
 .venv
-.env
+.env*
 venv
 
 # Python cache
 __pycache__
+
+# vscode
+.vscode
+pyrightconfig.json
