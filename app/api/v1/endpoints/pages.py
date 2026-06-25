@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, UploadFile
+from fastapi import APIRouter, Response
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse
 from logger import setup_logger

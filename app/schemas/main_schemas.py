@@ -39,16 +39,6 @@ class RequestsPostDTO(BaseModel):
     # На выходе: создает НОВЫЙ Pydantic-объект (ModelRequests)
     # Ключевой момент: from_orm() не трогает существующие данные.
     # Он просто читает поля из ORM-объекта и создает новый независимый объект Pydantic.
-    @classmethod
-    def from_orm(cls, orm_model: "UserRequestsORM") -> "RequestsPostDTO":
-        """Создает Pydantic-схему из ORM-объекта."""
-        return cls(
-            id=orm_model.id,
-            status=orm_model.status,
-            image_bytes=orm_model.image_bytes,
-            constructor_name=orm_model.constructor_name,
-            customer_name=orm_model.customer_name,
-        )
 
 
 class RequestsAllDTO(RequestsPostDTO):

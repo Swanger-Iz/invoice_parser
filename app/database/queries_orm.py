@@ -51,15 +51,14 @@ class DML_queries:
     @staticmethod
     async def insert_new_data_to_user_requests(row: RequestsPostDTO, session: SessionDep) -> bool:
         try:
-            row = row.to_orm()
-            session.add(row)
+            session.add(row.to_orm())
             # session.add_all(rows)
             await session.commit()
 
             logger.info("GOOD: Вставлена строка!")
             return True
         except Exception as e:
-            session.rollback()
+            await session.rollback()
             logger.info(f"BAD: Ошибка вставки: {e}")
             raise InsertingIntoDBError
 
