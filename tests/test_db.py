@@ -1,24 +1,22 @@
+import secrets
 from contextlib import nullcontext
-from typing import Annotated, Literal
 
 import pytest
 import pytest_asyncio
 from database.queries_core import DQL_queries
 from database.queries_orm import DML_queries
 from schemas.main_schemas import (
-    GetImageDTO,
-    GetImageHashDTO,
     RequestPreviewDTO,
     RequestsPostDTO,
 )
 
 ### FIXTURES WITH VALUES
 TEST_CASES = [
-    # {
-    #     "rows": [],
-    #     "exp": nullcontext(),
-    #     "exp_count": 0,
-    # },
+    {
+        "rows": [],
+        "exp": nullcontext(),
+        "exp_count": 0,
+    },
     {
         "rows": [
             RequestsPostDTO(
@@ -45,6 +43,7 @@ TEST_CASES = [
         ],
         "exp": nullcontext(),
         "exp_count": 3,
+        "ids": 2,
     },
     {
         "rows": [
@@ -86,12 +85,13 @@ TEST_CASES = [
         ],
         "exp": nullcontext(),
         "exp_count": 5,
+        "ids": 4,
     },
 ]
 
 
 @pytest_asyncio.fixture(params=TEST_CASES)
-async def session_with_data(test_session, request):
+async def session_with_data(test_session, request) -> dict:
     case_ = request.param
     rows = case_["rows"]
 
@@ -155,6 +155,7 @@ class TestDatabase:
 
         if validated_rows is None:
             assert validated_rows is None
+            return
 
         assert len(validated_rows) == exp_count
 
@@ -164,3 +165,27 @@ class TestDatabase:
         for row in validated_rows:
             print(RequestPreviewDTO.model_validate(row))
             assert isinstance(row, RequestPreviewDTO)
+
+    @pytest.mark.asyncio
+    async def test_get_all_rows(self, session_with_data: dict):
+        session, exp, exp_count = session_with_data.values()
+
+        rows = await DQL_queries.get_all_request_data(session)
+        if rows is None:
+            assert rows is None
+            return
+
+        assert len(rows) == exp_count
+
+    @pytest.mark.asyncio
+    async def test_get_data_by_id(self, session_with_data: dict):
+        session, exp, exp_count = session_with_data.values()
+        if exp_count == 0:
+            return
+
+        for i in range(3):
+            random_id = secrets.choice(range(exp_count - 1))
+            res = await DQL_queries.get_preview_request_data_by_id(session, random_id)
+            if res is None:
+                continue
+            assert random_id == res.id

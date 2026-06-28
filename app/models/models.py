@@ -2,10 +2,11 @@ import asyncio
 import io
 import os
 import time
+from pathlib import Path
 from typing import Annotated
 
 import numpy as np
-from custom_errors import NoneError
+from custom_errors import ModelServerError, NoneError, UnknownModelCallingError
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.agents.structured_output import StructuredOutputValidationError
@@ -31,8 +32,8 @@ logger = setup_logger(__name__)
 class ExtractionAgent:
 
     def __init__(self):
-        load_dotenv()
-        logger.info("\nENVIROMENT variables set, Starting loading a model!\n")
+        load_dotenv(dotenv_path=str(Path(__file__).parent.parent.parent / ".env"))
+        logger.info(f"\nENVIROMENT file: {str(Path(__file__).parent.parent.parent / '.env')} loaded, Starting loading a model!\n")
 
         self.ocr_model = self._init_PaddleOCR()
         self.image_parser = self._create_parser_tool(self.ocr_model)
@@ -111,11 +112,11 @@ class ExtractionAgent:
                 if "TooManyRequests" in str(e):
                     logger.info(f"Response time = {time.time() - start_time:.2f}")
                     logger.info("\nRate limit, try againg in 60 sec...")
-                    raise Exception("Too many requests!!")
+                    raise ModelServerError("Too many requests!!")
                 else:
                     logger.info(f"\nERROR - {e}")
                     logger.info(f"\nResponse time = {time.time() - start_time:.2f}")
-                    raise
+                    raise UnknownModelCallingError
         logger.info("=" * 20 + "Fail" + "=" * 20)
         logger.info(f"Response time = {time.time() - start_time:.2f}")
         return None
