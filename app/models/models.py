@@ -32,8 +32,8 @@ logger = setup_logger(__name__)
 class ExtractionAgent:
 
     def __init__(self):
-        load_dotenv(dotenv_path=str(Path(__file__).parent.parent.parent / ".env"))
-        logger.info(f"\nENVIROMENT file: {str(Path(__file__).parent.parent.parent / '.env')} loaded, Starting loading a model!\n")
+        load_dotenv()
+        logger.info(f"\nLoaded in: {os.getenv('MODE')} mode, Starting loading a model!\n")
 
         self.ocr_model = self._init_PaddleOCR()
         self.image_parser = self._create_parser_tool(self.ocr_model)

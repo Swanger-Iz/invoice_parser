@@ -1,19 +1,11 @@
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from main import app
+from schemas.main_schemas import RequestPreviewDTO
 from storage import task_storage
-
-
-def pytest_addoption(parser):
-    parser.addoption("--endpoint", default="pages", choises=("pages", "requests", "get-fio"))
-
-
-@pytest.fixture
-def endpoint(request):
-    return request.config.getoption("--endpoint")
 
 
 @pytest_asyncio.fixture
@@ -30,7 +22,7 @@ class TestEndpoints:
         response = await async_client.get("/")
         assert response.status_code == 200
 
-    @pytest.mark.skipif('config.getoption("--endpoint") != "pages"')
+    @pytest.mark.skipif('config.getoption("--endpoint") != "tasks"')
     @pytest.mark.asyncio
     async def test_get_status_existing_task(self, async_client):
         with patch.dict(task_storage, {"task_id": "in_progress"}):
@@ -39,7 +31,7 @@ class TestEndpoints:
             assert response.status_code == 200
             assert response.json()["status"] == "in_progress"
 
-    @pytest.mark.skipif('config.getoption("--endpoint") != "pages"')
+    @pytest.mark.skipif('config.getoption("--endpoint") != "tasks"')
     @pytest.mark.asyncio
     async def test_get_status_not_found(self, async_client):
         response = await async_client.get("/status/1")
@@ -47,4 +39,18 @@ class TestEndpoints:
 
     @pytest.mark.skipif('config.getoption("--endpoint") != "requests"')
     @pytest.mark.asyncio
-    async def test_get_all_requests(self): ...
+    async def test_get_all_requests_success(self, async_client):
+        fake_data = [
+            RequestPreviewDTO(id=1, constructor_name="Ilya Dyachenko", customer_name="Petr Pavlov"),
+            RequestPreviewDTO(id=2, constructor_name="Dmitry Karamazov", customer_name="Ilya Karamazov"),
+        ]
+        with patch("api.v1.endpoints.requests.DQL_queries.get_all_request_data", AsyncMock(return_value=fake_data)):
+            response = await async_client.get("/requests/")
+            assert response.status_code == 200
+
+    @pytest.mark.skipif('config.getoption("--endpoint") != "requests"')
+    @pytest.mark.asyncio
+    async def test_get_all_requests_error(self, async_client):
+        with patch("api.v1.endpoints.requests.DQL_queries.get_all_request_data", AsyncMock(return_value=None)):
+            response = await async_client.get("/requests/")
+            assert response.status_code == 404
