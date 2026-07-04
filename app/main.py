@@ -1,6 +1,11 @@
 import uvicorn
 from api.v1.router import api_router
-from custom_errors import InsertingIntoDBError, NoneError
+from custom_errors import (
+    InsertingIntoDBError,
+    ModelServerError,
+    NoneError,
+    UnknownModelCallingError,
+)
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,6 +45,16 @@ async def none_error_handler(request: Request, exc: HTTPException):
 @app.exception_handler(InsertingIntoDBError)
 async def inserting_into_db_handler(request: Request, exc: HTTPException):
     JSONResponse(status_code=500, content={"error": "Cannot insert into DB", "detail": str(exc), "type": "InsertingIntoDBError"})
+
+
+@app.exception_handler(ModelServerError)
+async def error_handler(request: Request, exc: HTTPException):
+    JSONResponse(status_code=503, content={"error": "Cannot send to server for detecting", "detail": str(exc), "type": "ModelServerError"})
+
+
+@app.exception_handler(UnknownModelCallingError)
+async def model_server_error_handler(request: Request, exc: HTTPException):
+    JSONResponse(status_code=500, content={"error": "Unknown Error while sending request", "detail": str(exc), "type": "UnknownModelCallingError"})
 
 
 if __name__ == "__main__":

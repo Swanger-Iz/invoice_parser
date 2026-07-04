@@ -5,6 +5,15 @@ from database.models import Base
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 
+def pytest_addoption(parser):
+    parser.addoption("--endpoint", default="pages", choices=("pages", "requests", "get-fio"))
+
+
+@pytest.fixture
+def endpoint(request):
+    return request.config.getoption("--endpoint")
+
+
 #### SESSION FIXTURES
 @pytest_asyncio.fixture
 async def test_session():
