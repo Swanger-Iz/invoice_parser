@@ -39,11 +39,14 @@ async def get_request(session: SessionDep, request_id: str) -> RequestPreviewDTO
 
 
 @router.get("/{request_id}/image")
-async def get_request_image(session: SessionDep, request_id: str):
+async def get_request_image(session: SessionDep, request_id: str) -> Response:
     try:
         request_id = int(request_id)
     except Exception:
         raise HTTPException(status_code=403, detail=f"Invalid {request_id} value, must be numeric")
+
+    if request_id < 0:
+        raise HTTPException(status_code=404, detail=f"Request {request_id} must be not negative number")
 
     response = await DQL_queries.get_image_by_id(session, request_id)
     image_bytes = response.image_bytes

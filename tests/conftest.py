@@ -5,8 +5,9 @@ from database.models import Base
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 
+#### Parsing Args
 def pytest_addoption(parser):
-    parser.addoption("--endpoint", default="pages", choices=("pages", "requests", "get-fio"))
+    parser.addoption("--endpoint", default="pages", choices=("pages", "requests", "get_fio", "get_fio_bt"))
 
 
 @pytest.fixture
