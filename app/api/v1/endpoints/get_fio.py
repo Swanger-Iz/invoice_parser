@@ -18,7 +18,7 @@ logger = setup_logger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["Recognize"])
 
 
-async def launch_model(image_in_bytes: bytes, session: SessionDep, task_id: str) -> RequestPreviewDTO:
+async def launch_model(image_in_bytes: bytes, session: SessionDep, task_id: str) -> RequestPreviewDTO | None:
     # Main Logic
     try:
         response = await asyncio.wait_for(extractor_agent.safely_exec_agent(3, image_in_bytes=image_in_bytes), timeout=60.0)
