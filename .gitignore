@@ -3,11 +3,12 @@
 *.pth
 
 # Datasets or other data files
-data
+
 
 # eviroments
 .venv
-.env*
+.env
+.env.test
 venv
 
 # Python cache
@@ -16,3 +17,6 @@ __pycache__
 # vscode
 .vscode
 pyrightconfig.json
+
+# pytest
+.pytest_cache
