@@ -27,6 +27,10 @@ async def launch_model(image_in_bytes: bytes, session: SessionDep, task_id: str)
         task_storage[task_id] = "error"
         return
         # raise HTTPException(status_code=504, detail="Processing timeout: model took too long")
+    except Exception as e:  # ловим всё остальное включая UnknownModelCallingError
+        task_storage[task_id] = "error"
+        logger.error(f"Task {task_id} failed: {e}")
+        return
 
     # Assume model calling fails, i.e. we cannot access to the model
     if response is None:
