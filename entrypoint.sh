@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-source /invoice_ai/.venv/bin/activate
+pwd
 
 echo "User: $(whoami)"
 echo "Home: $HOME"
