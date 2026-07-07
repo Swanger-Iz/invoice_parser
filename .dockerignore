@@ -1,0 +1,35 @@
+# Enviroment
+.venv
+
+# Secrets
+.env
+.env.test
+
+# My personal confs
+.vscode
+pyrightconfig.json
+
+# cache
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Tests
+tests/
+pytest.ini
+.pytest_cache
+
+# Jupyter notebooks
+notebooks/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Docs and helpers
+README.md
+test_docs/
+helpers/
