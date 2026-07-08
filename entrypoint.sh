@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-pwd
+echo "Current working dir: $(pwd)"
 
 echo "User: $(whoami)"
 echo "Home: $HOME"
@@ -11,7 +11,7 @@ echo "PATH: $PATH"
 echo "Venv exists: $(ls /invoice_ai/.venv/bin/python 2>/dev/null && echo YES || echo NO)"
 
 echo "Running Migration..."
-uv run app/migrations/recreate_table.py
+uv run --no-sync app/migrations/recreate_table.py
 
 echo "Starting app..."
-exec uv run app/main.py
+exec uv run --no-sync app/main.py -m docker
