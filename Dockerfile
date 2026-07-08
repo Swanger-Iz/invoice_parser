@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     python3.12 \
     python3.12-venv \
     python3-pip \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Installing uv by copying the binaries
@@ -44,7 +46,7 @@ COPY --chown=nonroot_user:nonroot_group --chmod=755 entrypoint.sh /invoice_ai/en
 RUN --mount=type=cache,target=/home/nonroot_user/.cache/uv,uid=999,gid=999 \
     uv sync --locked
 
-    RUN --mount=type=cache,target=/home/nonroot_user/.cache/uv,uid=999,gid=999 \
+RUN --mount=type=cache,target=/home/nonroot_user/.cache/uv,uid=999,gid=999 \
     uv pip install --python /invoice_ai/.venv paddlepaddle-gpu==3.3.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu130/ && \
     uv pip install --python /invoice_ai/.venv paddleocr==3.6.0
 

@@ -12,7 +12,7 @@ recognition_dir_path = models_dir_path / "rec"
 doc_orientation_dir_path = models_dir_path / "doc_orientation"
 
 # Langchain model config
-chat_model_name = "openai/gpt-oss-120b:free"
+chat_model_name = "openai/gpt-oss-20b:free"  # "tencent/hy3:free"  # "openai/gpt-oss-120b:free"
 system_prompt = """Ты — система извлечения данных из договоров.
 
 ВАЖНО: Ты ОБЯЗАН вернуть ответ в строгом JSON формате, который соответствует схеме ResponseFormat.

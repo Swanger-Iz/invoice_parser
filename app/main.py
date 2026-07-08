@@ -1,3 +1,5 @@
+import argparse
+
 import uvicorn
 from api.v1.router import api_router
 from custom_errors import (
@@ -14,6 +16,9 @@ from fastapi.staticfiles import StaticFiles
 from logger import setup_logger
 
 logger = setup_logger(__name__)
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-m", "--mode", default="local", choices=["docker", "local"])
 
 # FastAPI
 app = FastAPI()
@@ -58,21 +63,11 @@ async def model_server_error_handler(request: Request, exc: HTTPException):
 
 
 if __name__ == "__main__":
+    args = parser.parse_args()
+    host = "0.0.0.0" if args.mode == "docker" else "127.0.0.1"
     try:
-        uvicorn.run("main:app", host="127.0.0.1", port=8000)
+        logger.info(f"App runs in {args.mode} mode")
+        uvicorn.run("main:app", host=host, port=8000)
     except Exception as e:
         logger.info(f"Error - {e}")
         raise
-
-
-##### TESTS ######
-# invoice_ai_dir = Path(__file__).parent.parent
-# # logger.info("Working directory:", str(invoice_ai_dir))
-
-# # Init a image, test
-# image_path = invoice_ai_dir / "data" / "orion_agreement.png"
-# image = Image.open(str(image_path)).convert("RGB")
-
-# byte_buffer = io.BytesIO()
-# image.save(byte_buffer, format=image_path.suffix[1:])
-# image_bytes = byte_buffer.getvalue()
