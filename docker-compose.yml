@@ -29,13 +29,26 @@ services:
               capabilities: [gpu]
     networks:
       - invoice_app_net
-    ports:
-      - 8000:8000
+    # ports:
+    #   - 8000:8000
     env_file:
       - .env.docker
     depends_on:
       postgres_service:
         condition: service_healthy
+  
+  nginx_service:
+    image: nginx:stable
+    container_name: nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./app/static:/invoice_ai/app/static:ro  # статика напрямую
+    networks:
+      - invoice_app_net
+    depends_on:
+      - invoice_app_service
 
 networks:
   invoice_app_net:
