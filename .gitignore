@@ -10,6 +10,7 @@
 .env
 .env.test
 .env.docker
+.env.local
 venv
 
 # Python cache
